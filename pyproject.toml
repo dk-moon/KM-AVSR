@@ -6,5 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "konlpy>=0.6.0",
+    "sentencepiece>=0.2.0",
     "tqdm>=4.67.1",
 ]
