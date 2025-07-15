@@ -60,3 +60,8 @@ python morpheme_process.py
 ```bash
 python train_spm.py
 ```
+
+## 데이터 구축
+
+- AI Hub 말뭉치 데이터 다운로드
+- 문장 데이터 수합(특수 기호 제거)
