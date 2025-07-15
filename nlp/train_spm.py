@@ -4,15 +4,15 @@ import os
 # -------------------------
 # ✅ 설정값
 # -------------------------
-nbpe = 1207               # vocab_size(small data : 32, our : 1207, large data : 5000)
-bpemode = "bpe"      # model_type(unigram, bpe, word, char)
+n_units = 1207               # vocab_size(small vocab(sentence) : 200~500, middle vocab(subword) : 1,000~8,000, large vocab(word) : 16,000~32,000)
+model_type = "bpe"      # model_type(unigram, bpe, word, char)
 
 # 디렉토리 및 파일명 설정
-output_dir = bpemode
+output_dir = model_type
 os.makedirs(output_dir, exist_ok=True)
 
-dict_path = f"{output_dir}/{bpemode}{nbpe}_units.txt"
-model_prefix = f"{output_dir}/{bpemode}{nbpe}"
+dict_path = f"{output_dir}/{model_type}{n_units}_units.txt"
+model_prefix = f"{output_dir}/{model_type}{n_units}"
 
 input_file = "morpheme_input.txt"   # 형태소 기반 corpus
 
@@ -21,8 +21,8 @@ input_file = "morpheme_input.txt"   # 형태소 기반 corpus
 # -------------------------
 spm.SentencePieceTrainer.Train(
     input=input_file,
-    vocab_size=nbpe,
-    model_type=bpemode,
+    vocab_size=n_units,
+    model_type=model_type,
     model_prefix=model_prefix,
     input_sentence_size=100000000,
     character_coverage=1.0
