@@ -75,9 +75,9 @@ def main():
     # ⚙️ 데이터 모듈 & 모델 모듈
     # -----------------
     if args.modality in ["audio", "video"]:
-        from lightning import ModelModule
+        from lightning_singlemodal import ModelModule
     elif args.modality == "audiovisual":
-        from lightning_av import ModelModule
+        from lightning_multimodal import ModelModule
     else:
         raise ValueError(f"Invalid modality: {args.modality}")
 
