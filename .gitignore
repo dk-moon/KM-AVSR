@@ -1,0 +1,6 @@
+.venv
+.DS_Store
+
+# nlp
+input.txt
+morpheme_input.txt
