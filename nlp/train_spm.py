@@ -4,8 +4,8 @@ import os
 # -------------------------
 # ✅ 설정값
 # -------------------------
-nbpe = 5000               # vocab_size
-bpemode = "unigram"      # model_type
+nbpe = 1207               # vocab_size(small data : 32, our : 1207, large data : 5000)
+bpemode = "bpe"      # model_type(unigram, bpe, word, char)
 
 # 디렉토리 및 파일명 설정
 output_dir = bpemode
