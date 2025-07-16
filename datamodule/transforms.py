@@ -1,9 +1,3 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-
-# Copyright 2023 Imperial College London (Pingchuan Ma)
-# Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
-
 import os
 import random
 
@@ -19,15 +13,15 @@ NOISE_FILENAME = os.path.join(
 
 SP_MODEL_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "spm",
-    "unigram",
+    "nlp",
+    "bpe_1207",
     "unigram5000.model",
 )
 
 DICT_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "spm",
-    "unigram",
+    "nlp",
+    "bpe_1207",
     "unigram5000_units.txt",
 )
 
@@ -39,6 +33,21 @@ class FunctionalModule(torch.nn.Module):
 
     def forward(self, input):
         return self.functional(input)
+
+
+class NormalizeModule(torch.nn.Module):
+    def forward(self, x):
+        return x / 255.0
+
+
+class LayerNormModule(torch.nn.Module):
+    def forward(self, x):
+        return torch.nn.functional.layer_norm(x, x.shape, eps=1e-8)
+
+
+class IdentityModule(torch.nn.Module):
+    def forward(self, x):
+        return x
 
 
 class AdaptiveTimeMask(torch.nn.Module):
@@ -90,7 +99,7 @@ class VideoTransform:
     def __init__(self, subset):
         if subset == "train":
             self.video_pipeline = torch.nn.Sequential(
-                FunctionalModule(lambda x: x / 255.0),
+                NormalizeModule(),
                 torchvision.transforms.RandomCrop(88),
                 torchvision.transforms.Grayscale(),
                 AdaptiveTimeMask(10, 25),
@@ -98,7 +107,7 @@ class VideoTransform:
             )
         elif subset == "val" or subset == "test":
             self.video_pipeline = torch.nn.Sequential(
-                FunctionalModule(lambda x: x / 255.0),
+                NormalizeModule(),
                 torchvision.transforms.CenterCrop(88),
                 torchvision.transforms.Grayscale(),
                 torchvision.transforms.Normalize(0.421, 0.165),
@@ -116,19 +125,15 @@ class AudioTransform:
             self.audio_pipeline = torch.nn.Sequential(
                 AdaptiveTimeMask(6400, 16000),
                 #AddNoise(),
-                FunctionalModule(
-                    lambda x: torch.nn.functional.layer_norm(x, x.shape, eps=1e-8)
-                ),
+                LayerNormModule(),
             )
         elif subset == "val" or subset == "test":
             self.audio_pipeline = torch.nn.Sequential(
                 #AddNoise(snr_target=snr_target)
                 #if snr_target is not None
                 #else 
-                FunctionalModule(lambda x: x),
-                FunctionalModule(
-                    lambda x: torch.nn.functional.layer_norm(x, x.shape, eps=1e-8)
-                ),
+                IdentityModule(),
+                LayerNormModule(),
             )
 
     def __call__(self, sample):

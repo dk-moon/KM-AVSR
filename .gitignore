@@ -1,9 +1,11 @@
 .venv
 .DS_Store
 *.pyc
+dataset
+exp
 
 # nlp
 input.txt
 morpheme_input.txt
-unigram
-bpe
+unigram*
+bpe*

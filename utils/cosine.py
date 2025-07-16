@@ -1,13 +1,9 @@
 import numpy as np
 from torch.optim.lr_scheduler import _LRScheduler
 
-
 class WarmupCosineScheduler(_LRScheduler):
     def __init__(self, optimizer, warmup_epochs, num_epochs, iter_per_epoch):
-        self.base_lrs = {
-            param_group["name"]: param_group["lr"]
-            for param_group in optimizer.param_groups
-        }
+        self.base_lrs = [param_group["lr"] for param_group in optimizer.param_groups]
         self.warmup_iter = warmup_epochs * iter_per_epoch
         self.total_iter = num_epochs * iter_per_epoch
         self.optimizer = optimizer
@@ -28,8 +24,8 @@ class WarmupCosineScheduler(_LRScheduler):
             )
 
     def update_param_groups(self):
-        for param_group in self.optimizer.param_groups:
-            param_group["lr"] = self.get_lr(self.base_lrs[param_group["name"]])
+        for i, param_group in enumerate(self.optimizer.param_groups):
+            param_group["lr"] = self.get_lr(self.base_lrs[i])
 
     def step(self):
         self.update_param_groups()

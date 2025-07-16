@@ -1,6 +1,6 @@
 import torch
 import torchaudio
-from cosine import WarmupCosineScheduler
+from utils.cosine import WarmupCosineScheduler
 from datamodule.transforms import TextTransform
 
 from pytorch_lightning import LightningModule
@@ -9,9 +9,9 @@ from espnet.nets.pytorch_backend.e2e_asr_conformer import E2E
 from espnet.nets.scorers.length_bonus import LengthBonus
 from espnet.nets.scorers.ctc import CTCPrefixScorer
 import torch.nn.functional as F
-import numpy
-numpy.float = numpy.float64
-numpy.int = numpy.int_
+# import numpy
+# numpy.float = numpy.float64
+# numpy.int = numpy.int_
 import numpy as np
 
 def compute_word_level_distance(seq1, seq2):

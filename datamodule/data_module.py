@@ -12,7 +12,6 @@ from .samplers import (
 from .transforms import AudioTransform, VideoTransform
 
 
-# https://github.com/facebookresearch/av_hubert/blob/593d0ae8462be128faab6d866a3a926e2955bde1/avhubert/hubert_dataset.py#L517
 def pad(samples, pad_val=0.0):
     lengths = [len(s) for s in samples]
     max_size = max(lengths)
@@ -30,9 +29,9 @@ def pad(samples, pad_val=0.0):
     if len(samples[0].shape) == 1:
         collated_batch = collated_batch.unsqueeze(1)  # targets
     elif len(samples[0].shape) == 2:
-        pass  # collated_batch: [B, T, 1]
+        pass  # [B, T, 1]
     elif len(samples[0].shape) == 4:
-        pass  # collated_batch: [B, T, C, H, W]
+        pass  # [B, T, C, H, W]
     return collated_batch, lengths
 
 
@@ -52,11 +51,9 @@ class DataModule(LightningDataModule):
     def __init__(self, cfg=None):
         super().__init__()
         self.cfg = cfg
-        self.cfg.gpus = torch.cuda.device_count()
-        self.mouth_dir = cfg.mouth_dir
-        self.wav_dir = cfg.wav_dir
-        self.total_gpus = self.cfg.gpus * self.cfg.trainer.num_nodes
-    
+        self.cfg["gpus"] = torch.cuda.device_count()
+        self.total_gpus = self.cfg["gpus"] * self.cfg.get("trainer", {}).get("num_nodes", 1)
+
     def _dataloader(self, ds, sampler, collate_fn):
         return torch.utils.data.DataLoader(
             ds,
@@ -67,20 +64,18 @@ class DataModule(LightningDataModule):
         )
 
     def train_dataloader(self):
-        ds_args = self.cfg.data.dataset
+        ds_args = self.cfg["data"]["dataset"]
         train_ds = AVDataset(
-            root_dir=ds_args.root_dir,
-            label_path=os.path.join(
-                ds_args.root_dir, ds_args.label_dir, ds_args.train_file
-            ),
+            root_dir=ds_args["root_dir"],
+            label_path=ds_args["train_file"],
             subset="train",
-            modality=self.cfg.data.modality,
+            modality=self.cfg["data"]["modality"],
             audio_transform=AudioTransform("train"),
             video_transform=VideoTransform("train"),
-            mouth_dir=self.mouth_dir,
-            wav_dir=self.wav_dir,
+            mouth_dir=self.cfg["data"]["mouth_dir_train"],
+            wav_dir=self.cfg["data"]["wav_dir_train"],
         )
-        sampler = ByFrameCountSampler(train_ds, self.cfg.data.max_frames)
+        sampler = ByFrameCountSampler(train_ds, self.cfg["data"].get("max_frames", 300))
         if self.total_gpus > 1:
             sampler = DistributedSamplerWrapper(sampler)
         else:
@@ -88,41 +83,33 @@ class DataModule(LightningDataModule):
         return self._dataloader(train_ds, sampler, collate_pad)
 
     def val_dataloader(self):
-        ds_args = self.cfg.data.dataset
+        ds_args = self.cfg["data"]["dataset"]
         val_ds = AVDataset(
-            root_dir=ds_args.root_dir,
-            label_path=os.path.join(
-                ds_args.root_dir, ds_args.label_dir, ds_args.val_file
-            ),
+            root_dir=ds_args["root_dir"],
+            label_path=ds_args["val_file"],
             subset="val",
-            modality=self.cfg.data.modality,
+            modality=self.cfg["data"]["modality"],
             audio_transform=AudioTransform("val"),
             video_transform=VideoTransform("val"),
-            mouth_dir=self.mouth_dir,
-            wav_dir=self.wav_dir,
+            mouth_dir=self.cfg["data"]["mouth_dir_valid"],
+            wav_dir=self.cfg["data"]["wav_dir_valid"],
         )
-        sampler = ByFrameCountSampler(
-            val_ds, self.cfg.data.max_frames_val, shuffle=False
-        )
+        sampler = ByFrameCountSampler(val_ds, self.cfg["data"].get("max_frames_val", 300), shuffle=False)
         if self.total_gpus > 1:
             sampler = DistributedSamplerWrapper(sampler, shuffle=False, drop_last=True)
         return self._dataloader(val_ds, sampler, collate_pad)
 
     def test_dataloader(self):
-        ds_args = self.cfg.data.dataset
+        ds_args = self.cfg["data"]["dataset"]
         dataset = AVDataset(
-            root_dir=ds_args.root_dir,
-            label_path=os.path.join(
-                ds_args.root_dir, ds_args.label_dir, ds_args.test_file
-            ),
+            root_dir=ds_args["root_dir"],
+            label_path=ds_args.get("test_file", ""),  # 필요 시 수정
             subset="test",
-            modality=self.cfg.data.modality,
-            audio_transform=AudioTransform(
-                "test", snr_target=self.cfg.decode.snr_target
-            ),
+            modality=self.cfg["data"]["modality"],
+            audio_transform=AudioTransform("test", snr_target=self.cfg["decode"].get("snr_target") if "decode" in self.cfg else None),
             video_transform=VideoTransform("test"),
-            mouth_dir=self.mouth_dir,
-            wav_dir=self.wav_dir,
+            mouth_dir=self.cfg["data"].get("mouth_dir_test", self.cfg["data"]["mouth_dir_valid"]),
+            wav_dir=self.cfg["data"].get("wav_dir_test", self.cfg["data"]["wav_dir_valid"]),
         )
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=None)
         return dataloader

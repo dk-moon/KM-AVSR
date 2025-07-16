@@ -6,10 +6,22 @@
 EXP_DIR="./exp"
 EXP_NAME="my_experiment"
 MODALITY="audiovisual"        # audio, video, audiovisual 선택
-BATCH_SIZE=16
-MAX_EPOCHS=50
-DEVICE="gpu"                 # gpu 또는 cpu
+BATCH_SIZE=4
+MAX_EPOCHS=11
+DEVICE="cpu"                 # gpu 또는 cpu
 NUM_DEVICES=1
+
+# -----------------------
+# ⚙️ Dataset 경로
+# -----------------------
+DATASET_ROOT="/Users/dkmoon/Desktop/WorkSpace/DaeKyoCNS/LipReading/Code/KM-AVSR/dataset"
+TRAIN_FILE="/Users/dkmoon/Desktop/WorkSpace/DaeKyoCNS/LipReading/Code/KM-AVSR/dataset/train/train.csv"
+VAL_FILE="/Users/dkmoon/Desktop/WorkSpace/DaeKyoCNS/LipReading/Code/KM-AVSR/dataset/valid/valid.csv"
+
+MOUTH_DIR_TRAIN="/Users/dkmoon/Desktop/WorkSpace/DaeKyoCNS/LipReading/Code/KM-AVSR/dataset/train/Video"
+WAV_DIR_TRAIN="/Users/dkmoon/Desktop/WorkSpace/DaeKyoCNS/LipReading/Code/KM-AVSR/dataset/train/Audio"
+MOUTH_DIR_VALID="/Users/dkmoon/Desktop/WorkSpace/DaeKyoCNS/LipReading/Code/KM-AVSR/dataset/valid/Video"
+WAV_DIR_VALID="/Users/dkmoon/Desktop/WorkSpace/DaeKyoCNS/LipReading/Code/KM-AVSR/dataset/valid/Audio"
 
 # -----------------------
 # ⚙️ backbone & optimizer 설정
@@ -36,8 +48,6 @@ SYNC_BATCHNORM="--sync_batchnorm"  # 사용하지 않으면 주석 처리
 NUM_SANITY_VAL_STEPS=0
 ACCUMULATE_GRAD_BATCHES=1
 GRADIENT_CLIP_VAL=5.0
-REPLACE_SAMPLER_DDP=""    # 기본 True, False로 지정하려면 "--replace_sampler_ddp"
-RESUME_FROM_CHECKPOINT="" # 체크포인트 경로 지정 시 사용
 
 # -----------------------
 # ⚙️ Python 실행
@@ -50,6 +60,13 @@ python train.py \
     --max_epochs "$MAX_EPOCHS" \
     --device "$DEVICE" \
     --num_devices "$NUM_DEVICES" \
+    --dataset_root "$DATASET_ROOT" \
+    --train_file "$TRAIN_FILE" \
+    --val_file "$VAL_FILE" \
+    --mouth_dir_train "$MOUTH_DIR_TRAIN" \
+    --wav_dir_train "$WAV_DIR_TRAIN" \
+    --mouth_dir_valid "$MOUTH_DIR_VALID" \
+    --wav_dir_valid "$WAV_DIR_VALID" \
     --pretrained_model_path "$PRETRAINED_MODEL_PATH" \
     $TRANSFER_FRONTEND \
     $TRANSFER_ENCODER \
@@ -66,5 +83,3 @@ python train.py \
     --num_sanity_val_steps "$NUM_SANITY_VAL_STEPS" \
     --accumulate_grad_batches "$ACCUMULATE_GRAD_BATCHES" \
     --gradient_clip_val "$GRADIENT_CLIP_VAL" \
-    $REPLACE_SAMPLER_DDP \
-    --resume_from_checkpoint "$RESUME_FROM_CHECKPOINT"

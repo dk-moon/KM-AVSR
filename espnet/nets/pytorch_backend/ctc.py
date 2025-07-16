@@ -1,5 +1,6 @@
 import logging
-from distutils.version import LooseVersion
+# from distutils.version import LooseVersion
+from packaging.version import Version
 
 import numpy as np
 import six
@@ -28,9 +29,14 @@ class CTC(torch.nn.Module):
         self.probs = None  # for visualization
 
         # In case of Pytorch >= 1.7.0, CTC will be always builtin
+        # self.ctc_type = (
+        #     ctc_type
+        #     if LooseVersion(torch.__version__) < LooseVersion("1.7.0")
+        #     else "builtin"
+        # )
         self.ctc_type = (
             ctc_type
-            if LooseVersion(torch.__version__) < LooseVersion("1.7.0")
+            if Version(torch.__version__) < Version("1.7.0")
             else "builtin"
         )
 

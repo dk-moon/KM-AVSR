@@ -40,13 +40,14 @@ def load_audio(path):
     """
     if not os.path.exists(path):
         raise FileNotFoundError(f"Audio file not found at: {path}")
-    wav, sr = sf.read(path[:-4] + ".wav")
+    
+    wav, sr = sf.read(path)
     if wav.ndim == 2:
         wav = wav.mean(-1)  # Convert stereo to mono
     assert sr == 16_000, f"Expected sample rate 16000, but got {sr}"
     assert len(wav.shape) == 1, "Audio should be mono"
     audio = torch.Tensor(wav).unsqueeze(1)  # Add channel dimension
-    print(f"Loaded audio shape: {audio.shape} from {path}")  # Debugging information
+    # print(f"Loaded audio shape: {audio.shape} from {path}")  # Debugging information
     return audio
 
 
@@ -96,18 +97,24 @@ class AVDataset(torch.utils.data.Dataset):
         dataset_name, rel_path, input_length, token_id = self.list[idx]
 
         if self.modality == "video":
+            # Video files keep .mp4 extension
             video_path = os.path.join(self.root_dir, self.mouth_dir, rel_path)
             video = load_video(video_path)
             video = self.video_transform(video)
             return {"input": video, "target": token_id}
         elif self.modality == "audio":
-            audio_path = os.path.join(self.root_dir, self.wav_dir, rel_path)
+            # Audio files need .wav extension
+            audio_filename = os.path.splitext(rel_path)[0] + '.wav'
+            audio_path = os.path.join(self.root_dir, self.wav_dir, audio_filename)
             audio = load_audio(audio_path)
             audio = self.audio_transform(audio)
             return {"input": audio, "target": token_id}
         elif self.modality == "audiovisual":
+            # Video files keep .mp4 extension
             video_path = os.path.join(self.root_dir, self.mouth_dir, rel_path)
-            audio_path = os.path.join(self.root_dir, self.wav_dir, rel_path)
+            # Audio files need .wav extension
+            audio_filename = os.path.splitext(rel_path)[0] + '.wav'
+            audio_path = os.path.join(self.root_dir, self.wav_dir, audio_filename)
 
             video = load_video(video_path)
             audio = load_audio(audio_path)

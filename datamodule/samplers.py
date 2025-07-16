@@ -60,7 +60,7 @@ class ByFrameCountSampler(Sampler):
         else:
             order = [list(range(len(self.dataset)))]
         order.append(self.sizes)
-        return np.lexsort(order)[::-1]
+        return np.lexsort(order)[::-1].tolist()
 
     def __len__(self):
         return self.num_batches
@@ -156,7 +156,11 @@ class DistributedSamplerWrapper(DistributedSampler):
         indexes_of_indexes = super().__iter__()
 
         subsampler_indexes = self.dataset
-        return iter(itemgetter(*indexes_of_indexes)(subsampler_indexes))
+        indexes_list = list(indexes_of_indexes)
+        if len(indexes_list) == 1:
+            return iter([subsampler_indexes[indexes_list[0]]])
+        else:
+            return iter(itemgetter(*indexes_list)(subsampler_indexes))
 
     def set_epoch(self, epoch):
         super().set_epoch(epoch)
@@ -176,4 +180,8 @@ class RandomSamplerWrapper(RandomSampler):
         self.dataset = DatasetFromSampler(self.sampler)
         indexes_of_indexes = super().__iter__()
         subsampler_indexes = self.dataset
-        return iter(itemgetter(*indexes_of_indexes)(subsampler_indexes))
+        indexes_list = list(indexes_of_indexes)
+        if len(indexes_list) == 1:
+            return iter([subsampler_indexes[indexes_list[0]]])
+        else:
+            return iter(itemgetter(*indexes_list)(subsampler_indexes))
